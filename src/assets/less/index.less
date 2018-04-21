@@ -1,0 +1,39 @@
+@import './reset.less';
+@import './base.less';
+@import './transition.less';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  // user-select: none;
+}
+
+input {
+  caret-color: #2b89ea;
+}
+
+input::placeholder {
+  color: #bbb;
+  letter-spacing: 1px; /* no */
+}
+
+input::-webkit-clear {
+  display: none;
+}
+
+input[type='search'] {
+  -webkit-appearance: none;
+}
+
+input::-webkit-search-cancel-button {
+  display: none;
+}
