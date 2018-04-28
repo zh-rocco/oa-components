@@ -7,9 +7,9 @@ export default {
   name: 'radio',
 
   data() {
-    return {};
+    return {}
   }
-};
+}
 </script>
 
 <style lang="less">
