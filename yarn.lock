@@ -873,9 +873,9 @@ bcrypt-pbkdf@^1.0.0:
   dependencies:
     tweetnacl "^0.14.3"
 
-better-scroll@^1.10.0:
-  version "1.10.0"
-  resolved "http://registry.npm.taobao.org/better-scroll/download/better-scroll-1.10.0.tgz#b3968b5f6f605f4a038e1ef689d06306aaf9211c"
+better-scroll@^1.10.2:
+  version "1.10.2"
+  resolved "http://192.168.10.223:7001/better-scroll/download/better-scroll-1.10.2.tgz#fbebcee09880643d0c2251eb4cb9582592c908c1"
   dependencies:
     babel-runtime "^6.0.0"
 

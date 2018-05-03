@@ -1,5 +1,6 @@
 <template>
-  <div class="drop-menu">
+  <div class="drop-menu"
+       :class="{'fixed': fixed}">
     <ul ref="menuBar"
         class="drop-menu__bar">
       <li class="bar-item"
@@ -16,26 +17,33 @@
       <transition name="fade">
         <div class="popup-mask"
              v-if="isPopupShow"
-             @touchmove.passive.stop></div>
+             @touchmove.prevent.stop
+             @click.self="$_closePopup"></div>
       </transition>
 
       <transition name="slide-down"
                   mode="out-in">
-        <ul class="popup-items"
-            :key="barIndex"
-            v-if="isPopupShow">
-          <li class="popup-item"
-              v-for="(item, index) in popupItems"
-              :class="{'hairline-bottom': index !== popupItems.length - 1}"
-              :key="'popup-item-' + index"
-              @touchmove.stop
-              @click="$_onPopupItemClick(index)">
-            <div class="popup-content"
-                 :class="{'active': data[barIndex] && data[barIndex].text === item.text}">
-              <span>{{ item.text }}</span>
-            </div>
-          </li>
-        </ul>
+        <scroll ref="scroll"
+                :key="barIndex"
+                v-if="isPopupShow"
+                :data="popupItems"
+                :options="{click: false, stopPropagation: true}"
+                :style="{'max-height': maxHeight + 'px'}">
+
+          <ul class="popup-items">
+            <li class="popup-item"
+                v-for="(item, index) in popupItems"
+                :class="{'hairline-bottom': index !== popupItems.length - 1}"
+                :key="'popup-item-' + index"
+                @click="$_onPopupItemClick($event, index)">
+              <div class="popup-content"
+                   :class="{'active': data[barIndex] && data[barIndex].text === item.text}">
+                <span>{{ item.text }}</span>
+              </div>
+            </li>
+          </ul>
+
+        </scroll>
       </transition>
     </div>
 
@@ -46,10 +54,17 @@
 </template>
 
 <script>
+import Scroll from '../scroll/index'
+import { getRect } from '../../utils/index'
+
 export default {
   name: 'drop-menu',
 
+  components: { Scroll },
+
   props: {
+    sticky: { type: Boolean, default: false },
+    fixed: { type: Boolean, default: false },
     data: {
       type: Array,
       default() {
@@ -62,16 +77,9 @@ export default {
     return {
       isPopupShow: false,
       barIndex: null, // 当前 menu-bar 的索引
-      popupItems: [] // popup 内展示的列表
+      popupItems: [], // popup 内展示的列表
+      maxHeight: 'auto'
     }
-  },
-
-  computed: {
-    // popupItems() {
-    //   return (
-    //     (this.data[this.barIndex] && this.data[this.barIndex].options) || []
-    //   )
-    // }
   },
 
   mounted() {
@@ -105,26 +113,21 @@ export default {
     $_changeEvent() {
       const result = this.data.map(item => item.text)
       this.$emit('change', result)
-      // console.log(JSON.stringify(result))
     },
 
     // MARK: events handler
     $_eventHandler(event) {
-      if (this.isPopupShow) {
-        event.preventDefault()
-        event.stopPropagation()
-      } else {
-        return false
+      if (!this.isPopupShow) {
+        return
       }
 
       let target = event.target
-
       if (!target) {
         return
       }
 
       while (target.tagName.toUpperCase() !== 'BODY') {
-        if (target === this.$refs.menuBar) {
+        if (target === this.$el) {
           return
         }
         target = target.parentNode
@@ -133,6 +136,7 @@ export default {
       this.$_closePopup()
     },
     $_onBarItemClick(index) {
+      this.$_setPopupHeight()
       if (this.barIndex === index && this.isPopupShow) {
         this.$_closePopup()
       } else {
@@ -140,12 +144,46 @@ export default {
         this.isPopupShow = true
       }
     },
-    $_onPopupItemClick(index) {
+    $_onPopupItemClick(event, index) {
       let currentBar = this.data[this.barIndex]
+      console.log('popupItem clicked.', this.barIndex)
       let currentPopup = currentBar.options
       currentBar.text = currentPopup[index].text
       this.$_changeEvent()
-      // this.$_closePopup()
+      this.$_closePopup()
+    },
+    $_setPopupHeight() {
+      let parent = this.$parent
+
+      while (parent && !parent.scroll) {
+        parent = parent.$parent
+      }
+
+      if (!parent) {
+        return
+      }
+
+      const scroll = parent.scroll
+      const scrollY = scroll.y
+      const scrollRect = getRect(parent.$el)
+
+      const rect = getRect(this.$el)
+      console.log('rect', rect)
+      const $offsetParent = this.$el.offsetParent
+
+      if ($offsetParent) {
+        // console.log(rect)
+        // console.log($offsetParent)
+        const parentRect = getRect($offsetParent)
+        console.log('parentRect', parentRect)
+        const offsetScreenBottom =
+          scrollRect.height - (rect.top + scrollY + rect.height)
+        // scrollRect.height - (rect.top + rect.height)
+
+        console.log(rect, scrollY, offsetScreenBottom)
+        this.maxHeight = offsetScreenBottom
+        this.popupItems = []
+      }
     }
   }
 }
@@ -160,16 +198,37 @@ export default {
 
 .drop-menu {
   position: relative;
-  padding-top: @bar-height;
-  // overflow: hidden;
+
+  .scroll-wrapper {
+    background-color: #fff;
+  }
+
+  &.fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+
+    .drop-menu__popup {
+      position: fixed;
+      bottom: 0;
+    }
+
+    .popup-mask {
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .scroll-wrapper {
+      max-height: 100%;
+    }
+  }
 }
 
 .drop-menu__bar {
   display: flex;
-  position: absolute;
+  position: relative;
   z-index: 2;
-  top: 0;
-  left: 0;
   width: 100%;
   height: @bar-height;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
@@ -224,7 +283,6 @@ export default {
   position: absolute;
   z-index: 1;
   top: @bar-height;
-  bottom: 0;
   width: 100%;
   pointer-events: none;
   overflow: hidden;
@@ -234,11 +292,10 @@ export default {
   }
 
   .popup-mask {
-    position: absolute;
+    position: fixed;
     top: 0;
+    bottom: 0;
     width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.2);
   }
 
   .popup-items {
@@ -280,6 +337,11 @@ export default {
       }
     }
   }
+
+  .scroll-wrapper {
+    height: auto;
+    max-width: 100%;
+  }
 }
 
 /* 1px */
@@ -319,32 +381,6 @@ export default {
 
   &:after {
     content: '';
-  }
-}
-
-.hairline-left {
-  &:extend(.hairline all);
-
-  &:before {
-    content: '';
-    top: 0;
-    width: 1px; /* no */
-    height: 100%;
-    transform: scaleX(0.5);
-  }
-}
-
-.hairline-right {
-  &:extend(.hairline all);
-
-  &:after {
-    content: '';
-    top: 0;
-    left: auto;
-    right: 0;
-    width: 1px; /* no */
-    height: 100%;
-    transform: scaleX(0.5);
   }
 }
 </style>
