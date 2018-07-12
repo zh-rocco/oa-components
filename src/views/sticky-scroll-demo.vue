@@ -16,7 +16,8 @@
 
       <drop-menu ref="stickyElement"
                  :data="dropMenu"
-                 :key="'inner'">
+                 :key="'inner'"
+                 @change="handleChange">
       </drop-menu>
 
       <ul>
@@ -29,13 +30,14 @@
     <drop-menu v-if="fixed"
                :fixed="true"
                :data="dropMenu"
-               :key="'outer'"></drop-menu>
+               :key="'outer'"
+               @change="handleChange"></drop-menu>
   </div>
 </template>
 
 <script>
-import Scroll from '../components/scroll/index'
-import DropMenu from '../components/drop-menu-2/index'
+import Scroll from '../components/scroll/index';
+import DropMenu from '../components/drop-menu-2/index';
 
 export default {
   name: 'oa-scroll',
@@ -55,74 +57,85 @@ export default {
       _stickyOffsetTop: 0,
       dropMenu: [
         {
-          text: '类型',
+          selected: 1,
           options: [
-            { text: '合同审批' },
-            { text: '盖章审批' },
-            { text: '借款审批' }
+            { label: '全部类型', value: 0 },
+            { label: '合同审批', value: 1 },
+            { label: '盖章审批', value: 2 },
+            { label: '借款审批', value: 3 }
           ]
         },
         {
-          text: '项目',
+          selected: 0,
           options: [
-            { text: '项目1' },
-            { text: '项目2' },
-            { text: '项目3' },
-            { text: '项目4' },
-            { text: '项目5' },
-            { text: '项目6' },
-            { text: '项目7' },
-            { text: '项目8' },
-            { text: '项目9' }
+            { label: '全部项目', value: 0 },
+            { label: '项目1', value: 1 },
+            { label: '项目2', value: 2 },
+            { label: '项目3', value: 3 },
+            { label: '项目4', value: 4 },
+            { label: '项目5', value: 5 },
+            { label: '项目6', value: 6 },
+            { label: '项目7', value: 7 },
+            { label: '项目8', value: 8 },
+            { label: '项目9', value: 9 }
           ]
         },
         {
-          text: '部门1',
-          options: [{ text: '部门1' }, { text: '部门2' }, { text: '部门3' }]
+          selected: 1,
+          options: [
+            { label: '全部部门', value: 0 },
+            { label: '部门1', value: 1 },
+            { label: '部门2', value: 2 },
+            { label: '部门3', value: 3 }
+          ]
         }
       ]
-    }
+    };
   },
 
   computed: {},
 
   created() {
-    let size = 50
+    let size = 50;
 
     while (size > 0) {
-      this.items.push(`第 ${size} 项`)
-      size--
+      this.items.push(`第 ${size} 项`);
+      size--;
     }
   },
 
   mounted() {
-    this._stickyOffsetTop = this.$refs.stickyElement.$el.offsetTop
+    this._stickyOffsetTop = this.$refs.stickyElement.$el.offsetTop;
   },
 
   methods: {
     onPullingDown() {
-      console.log('onPullingDown')
+      console.log('onPullingDown');
       setTimeout(() => {
-        this.scrollOptions.pullDownRefresh = false
-      }, 1000)
+        this.scrollOptions.pullDownRefresh = false;
+      }, 1000);
     },
     onPullingUp() {
-      console.log('onPullingUp')
+      console.log('onPullingUp');
       setTimeout(() => {
-        this.scrollOptions.pullUpLoad = false
-      }, 1000)
+        this.scrollOptions.pullUpLoad = false;
+      }, 1000);
     },
     onScroll({ y }) {
-      const offsetTop = this._stickyOffsetTop
+      const offsetTop = this._stickyOffsetTop;
       // console.log(`y: ${-y}, offsetTop: ${offsetTop}`)
       if (-y >= offsetTop) {
-        this.fixed = true
+        this.fixed = true;
       } else {
-        this.fixed = false
+        this.fixed = false;
       }
+    },
+
+    handleChange(result) {
+      console.log(result);
     }
   }
-}
+};
 </script>
 
 <style lang="less">

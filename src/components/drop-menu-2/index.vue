@@ -8,7 +8,7 @@
           :key="'bar-item-' + index"
           :class="{'active': barIndex === index}"
           @click="$_onBarItemClick(index)">
-        <span class="bar-content">{{ item.text }}</span>
+        <span class="bar-content">{{ getLabel(item.selected, item.options) }}</span>
       </li>
     </ul>
 
@@ -37,8 +37,8 @@
                 :key="'popup-item-' + index"
                 @click="$_onPopupItemClick($event, index)">
               <div class="popup-content"
-                   :class="{'active': data[barIndex] && data[barIndex].text === item.text}">
-                <span>{{ item.text }}</span>
+                   :class="{'active': data[barIndex] && data[barIndex].selected === item.value}">
+                <span>{{ item.label }}</span>
               </div>
             </li>
           </ul>
@@ -54,8 +54,8 @@
 </template>
 
 <script>
-import Scroll from '../scroll/index'
-import { getRect } from '../../utils/index'
+import Scroll from '../scroll/index';
+import { getRect } from '../../utils/index';
 
 export default {
   name: 'drop-menu',
@@ -68,7 +68,7 @@ export default {
     data: {
       type: Array,
       default() {
-        return []
+        return [];
       }
     }
   },
@@ -79,22 +79,22 @@ export default {
       barIndex: null, // 当前 menu-bar 的索引
       popupItems: [], // popup 内展示的列表
       maxHeight: 'auto'
-    }
+    };
   },
 
   mounted() {
-    document.addEventListener('click', this.$_eventHandler)
+    document.addEventListener('click', this.$_eventHandler);
   },
 
   destroyed() {
-    document.removeEventListener('click', this.$_eventHandler)
+    document.removeEventListener('click', this.$_eventHandler);
   },
 
   watch: {
     barIndex(newVal) {
       if (newVal !== null) {
         this.popupItems =
-          (this.data[this.barIndex] && this.data[this.barIndex].options) || []
+          (this.data[this.barIndex] && this.data[this.barIndex].options) || [];
       }
     }
   },
@@ -102,97 +102,106 @@ export default {
   methods: {
     // MARK: private methods
     $_showPopup() {
-      this.$emit('show', this.barIndex)
-      this.isPopupShow = true
+      this.$emit('show', this.barIndex);
+      this.isPopupShow = true;
     },
     $_closePopup() {
-      this.$emit('hide', this.barIndex)
-      this.isPopupShow = false
-      this.barIndex = null
+      this.$emit('hide', this.barIndex);
+      this.isPopupShow = false;
+      this.barIndex = null;
     },
     $_changeEvent() {
-      const result = this.data.map(item => item.text)
-      this.$emit('change', result)
+      const result = this.data.map(item => item.selected);
+      this.$emit('change', result);
     },
 
     // MARK: events handler
     $_eventHandler(event) {
       if (!this.isPopupShow) {
-        return
+        return;
       }
 
-      let target = event.target
+      let target = event.target;
       if (!target) {
-        return
+        return;
       }
 
       while (target.tagName.toUpperCase() !== 'BODY') {
         if (target === this.$el) {
-          return
+          return;
         }
-        target = target.parentNode
+        target = target.parentNode;
       }
 
-      this.$_closePopup()
+      this.$_closePopup();
     },
     $_onBarItemClick(index) {
-      this.$_setPopupHeight()
+      this.$_setPopupHeight();
       if (this.barIndex === index && this.isPopupShow) {
-        this.$_closePopup()
+        this.$_closePopup();
       } else {
-        this.barIndex = index
-        this.isPopupShow = true
+        this.barIndex = index;
+        this.isPopupShow = true;
       }
     },
     $_onPopupItemClick(event, index) {
-      let currentBar = this.data[this.barIndex]
-      console.log('popupItem clicked.', this.barIndex)
-      let currentPopup = currentBar.options
-      currentBar.text = currentPopup[index].text
-      this.$_changeEvent()
-      this.$_closePopup()
+      // if (!event._constructed) {
+      //   // 如果不存在这个属性,则不执行下面的函数
+      //   return;
+      // }
+
+      let currentBar = this.data[this.barIndex];
+      // console.log('popupItem clicked.', this.barIndex)
+      let currentPopup = currentBar.options;
+      currentBar.selected = currentPopup[index].value;
+      this.$_changeEvent();
+      this.$_closePopup();
     },
     $_setPopupHeight() {
-      let parent = this.$parent
+      let parent = this.$parent;
 
       while (parent && !parent.scroll) {
-        parent = parent.$parent
+        parent = parent.$parent;
       }
 
       if (!parent) {
-        return
+        return;
       }
 
-      const scroll = parent.scroll
-      const scrollY = scroll.y
-      const scrollRect = getRect(parent.$el)
+      const scroll = parent.scroll;
+      const scrollY = scroll.y;
+      const scrollRect = getRect(parent.$el);
 
-      const rect = getRect(this.$el)
-      console.log('rect', rect)
-      const $offsetParent = this.$el.offsetParent
+      const rect = getRect(this.$el);
+      // console.log('rect', rect)
+      const $offsetParent = this.$el.offsetParent;
 
       if ($offsetParent) {
         // console.log(rect)
         // console.log($offsetParent)
-        const parentRect = getRect($offsetParent)
-        console.log('parentRect', parentRect)
+        const parentRect = getRect($offsetParent);
+        // console.log('parentRect', parentRect)
         const offsetScreenBottom =
-          scrollRect.height - (rect.top + scrollY + rect.height)
+          scrollRect.height - (rect.top + scrollY + rect.height);
         // scrollRect.height - (rect.top + rect.height)
 
-        console.log(rect, scrollY, offsetScreenBottom)
-        this.maxHeight = offsetScreenBottom
-        this.popupItems = []
+        // console.log(rect, scrollY, offsetScreenBottom)
+        this.maxHeight = offsetScreenBottom;
+        this.popupItems = [];
       }
+    },
+    getLabel(value, list = []) {
+      const obj = list.find(item => item.value === value);
+      return obj ? obj.label : '';
     }
   }
-}
+};
 </script>
 
 <style lang="less" scoped>
 @r: 3.75vw;
-@bar-height: 40/@r;
-@font-size: 12/@r;
+@bar-height: 40 / @r;
+@font-size: 12 / @r;
 @default-color: #000;
 @active-color: #00a2e6;
 
@@ -257,7 +266,7 @@ export default {
 
   .bar-content {
     position: relative;
-    padding-right: 10/@r;
+    padding-right: 10 / @r;
 
     &::after {
       content: '';
@@ -304,7 +313,7 @@ export default {
     position: relative;
     width: 100%;
     max-height: 100%;
-    padding: 0 16/@r;
+    padding: 0 16 / @r;
     background-color: #fff;
     line-height: 1;
     overflow-x: hidden;
@@ -313,7 +322,7 @@ export default {
 
   .popup-item {
     position: relative;
-    padding: 16/@r 0;
+    padding: 16 / @r 0;
   }
 
   .popup-content {
