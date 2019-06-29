@@ -1,5 +1,7 @@
 # better-scroll-sticky
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/zh-rocco/oa-components.svg)](https://greenkeeper.io/)
+
 > A Vue.js project
 
 ## Build Setup
